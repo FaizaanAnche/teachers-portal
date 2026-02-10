@@ -5,10 +5,11 @@ import Header from "@/components/Header";
 import StudentCard from "@/components/StudentCard";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
-import Modal from "@/components/Modal";
+import Modal from "@/components/ui/Modal";
+import StudentForm from "@/components/StudentForm";
+import DialogBox from "@/components/ui/DialogBox";
 
 export default function DashboardPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [students, setStudents] = useState([
     {
       id: "1",
@@ -40,17 +41,54 @@ export default function DashboardPage() {
     },
   ]);
 
-  const handleEdit = (student) => {
-    console.log("Edit student:", student);
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
+  const handleAddStudent = (studentData) => {
+    const newStudent = {
+      id: Date.now().toString(),
+      ...studentData,
+    };
+
+    setStudents([...students, newStudent]);
+    setIsAddModalOpen(false);
+    console.log("Student added:", newStudent);
   };
 
-  const handleDelete = (studentId) => {
-    console.log("Delete student:", studentId);
+  const handleEditClick = (student) => {
+    setSelectedStudent(student);
+    setIsEditModalOpen(true);
   };
 
-  const handleAddStudent = () => {
-    setIsModalOpen(true);
-    console.log("Add new student");
+  const handleUpdateStudent = (studentData) => {
+    setStudents(
+      students.map((student) =>
+        student.id === selectedStudent.id
+          ? { ...student, ...studentData }
+          : student,
+      ),
+    );
+    setIsEditModalOpen(false);
+    setSelectedStudent(null);
+    console.log("Student updated:", studentData);
+  };
+
+  const handleDeleteClick = (studentId) => {
+    const student = students.find((s) => s.id === studentId);
+    setSelectedStudent(student);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setStudents(
+      students.filter((student) => student.id !== selectedStudent.id),
+    );
+    setSelectedStudent(null);
+    console.log("Student deleted:", selectedStudent);
   };
 
   return (
@@ -63,10 +101,12 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-800">Students</h2>
-              <p className="text-gray-600 mt-1">Manage your student roster</p>
+              <p className="text-gray-600 mt-1">
+                Manage your student roster ({students.length} students)
+              </p>
             </div>
             <Button
-              onClick={handleAddStudent}
+              onClick={() => setIsAddModalOpen(true)}
               variant="primary"
               size="large"
             >
@@ -80,8 +120,8 @@ export default function DashboardPage() {
               <StudentCard
                 key={student.id}
                 student={student}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
               />
             ))}
           </div>
@@ -91,19 +131,58 @@ export default function DashboardPage() {
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No students found</p>
               <p className="text-gray-400 mt-2">
-                Click &quot;Add Student&quot; to get started
+                Click Add Student to get started
               </p>
             </div>
           )}
         </Container>
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title="Test Modal"
-        >
-          <p>The backdrop should now be semi-transparent!</p>
-        </Modal>
       </main>
+
+      {/* Add Student Modal */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Add New Student"
+      >
+        <StudentForm
+          onSubmit={handleAddStudent}
+          onCancel={() => setIsAddModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Edit Student Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedStudent(null);
+        }}
+        title="Edit Student"
+      >
+        <StudentForm
+          initialData={selectedStudent}
+          onSubmit={handleUpdateStudent}
+          onCancel={() => {
+            setIsEditModalOpen(false);
+            setSelectedStudent(null);
+          }}
+        />
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <DialogBox
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setSelectedStudent(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Student"
+        message={`Are you sure you want to delete ${selectedStudent?.name}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

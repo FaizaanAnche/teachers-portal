@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import Modal from "@/components/Modal";
+import Modal from "@/components/ui/Modal";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function LoginPage() {
 
     if (!newErrors.email && !newErrors.password) {
       console.log("Login attempted", { email, password });
-      router.push("/dashboard");
+      router.push("/Dashboard");
     }
   };
 
